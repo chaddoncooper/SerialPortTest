@@ -1,4 +1,4 @@
-﻿namespace SerialPortTest.Options
+﻿namespace Arcta.Lims.Machines.Protocols.Transport.Options
 {
     public class ProtocolOptions
     {

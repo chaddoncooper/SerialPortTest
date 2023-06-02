@@ -1,6 +1,6 @@
 ﻿using System.IO.Ports;
 
-namespace SerialPortTest.RS232;
+namespace Arcta.Lims.Machines.Protocols.Transport.Options;
 
 public class RS232Options
 {

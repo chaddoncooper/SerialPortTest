@@ -1,7 +1,4 @@
-﻿using SerialPortTest.RS232;
-using SerialPortTest.TCP;
-
-namespace SerialPortTest.Options
+﻿namespace Arcta.Lims.Machines.Protocols.Transport.Options
 {
     public class PhysicalLayerOptions
     {

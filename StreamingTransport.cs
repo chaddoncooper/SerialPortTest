@@ -1,23 +1,28 @@
-﻿using Microsoft.Extensions.Logging;
-using SerialPortTest.Extensions;
+﻿using Arcta.Lims.Machines.Protocols.Transport.Extensions;
+using Microsoft.Extensions.Logging;
 using System.Text;
 
-namespace SerialPortTest
+namespace Arcta.Lims.Machines.Protocols.Transport
 {
-    internal partial class StreamingPhysicalLayer : IPhysicalLayer
+    public abstract partial class StreamingTransport : ITransport
     {
-        private readonly ILogger _logger;
-        private readonly Stream _stream;
+        protected readonly ILogger _logger;
+        protected Stream? Stream;
 
         public event EventHandler<string>? NewInboundMessageEvent;
 
-        public StreamingPhysicalLayer(ILogger logger, Stream stream)
+        public StreamingTransport(ILogger logger)
         {
             _logger = logger;
-            _stream = stream;
         }
+
         public async Task StartReceivingInboundMessagesAsync(CancellationToken cancellationToken)
         {
+            if (Stream == null)
+            {
+                _logger.LogError("Unable to receive as stream is null");
+                return;
+            }
             var buffer = new byte[4096];
 
             _logger.LogTrace("{MethodName} started", nameof(StartReceivingInboundMessagesAsync));
@@ -26,7 +31,7 @@ namespace SerialPortTest
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    int bytesRead = await _stream.ReadAsync(buffer, cancellationToken);
+                    int bytesRead = await Stream.ReadAsync(buffer, cancellationToken);
 
                     if (bytesRead == 0)
                     {
@@ -72,10 +77,16 @@ namespace SerialPortTest
 
         public async Task SendOutboundMessageAsync(string outboundMessage, CancellationToken cancellationToken)
         {
+            if (Stream == null)
+            {
+                _logger.LogError("Unable to send as stream is null");
+                return;
+            }
+
             try
             {
                 LogOutboundMessage(outboundMessage);
-                await _stream.WriteAsync(Encoding.ASCII.GetBytes(outboundMessage), cancellationToken);
+                await Stream.WriteAsync(Encoding.ASCII.GetBytes(outboundMessage), cancellationToken);
             }
             catch (OperationCanceledException)
             {

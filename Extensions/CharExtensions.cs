@@ -1,4 +1,4 @@
-﻿namespace SerialPortTest.Extensions
+﻿namespace Arcta.Lims.Machines.Protocols.Transport.Extensions
 {
     internal static class CharExtensions
     {

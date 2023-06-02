@@ -1,6 +1,6 @@
-﻿namespace SerialPortTest
+﻿namespace Arcta.Lims.Machines.Protocols.Transport
 {
-    public interface IPhysicalLayer
+    public interface ITransport
     {
         public event EventHandler<string>? NewInboundMessageEvent;
         public Task StartReceivingInboundMessagesAsync(CancellationToken cancellationToken);
