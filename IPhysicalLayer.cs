@@ -1,6 +1,6 @@
 ﻿namespace SerialPortTest
 {
-    internal interface IProtocolLayer
+    public interface IPhysicalLayer
     {
         public event EventHandler<string>? NewInboundMessageEvent;
         public Task StartReceivingInboundMessagesAsync(CancellationToken cancellationToken);

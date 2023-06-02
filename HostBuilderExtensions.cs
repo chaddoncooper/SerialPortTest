@@ -8,9 +8,7 @@ internal static class HostBuilderExtensions
     {
         return builder.ConfigureServices((hostBuilderContext, services) =>
             services
-
-                .Configure<RS232Options>(hostBuilderContext.Configuration.GetSection(RS232Options.RS232))
-                .AddScoped<RS232InstrumentPhysicalLayer>()
+                .AddScoped<IProtocolFactory, ProtocolFactory>()
         );
     }
 }

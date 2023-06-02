@@ -1,18 +1,19 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SerialPortTest.Extensions;
 using System.IO.Ports;
 using System.Text;
 
-namespace SerialPortTest
+namespace SerialPortTest.RS232
 {
-    public sealed class RS232InstrumentPhysicalLayer : IDisposable, IProtocolLayer
+    public sealed class RS232PhysicalLayer : IDisposable, IPhysicalLayer
     {
         private readonly SerialPort _serialPort;
-        private readonly ILogger<RS232InstrumentPhysicalLayer> _logger;
+        private readonly ILogger<RS232PhysicalLayer> _logger;
         private readonly RS232Options _options;
         public event EventHandler<string>? NewInboundMessageEvent;
 
-        public RS232InstrumentPhysicalLayer(ILogger<RS232InstrumentPhysicalLayer> logger, IOptions<RS232Options> options)
+        public RS232PhysicalLayer(ILogger<RS232PhysicalLayer> logger, IOptions<RS232Options> options)
         {
             _options = options.Value;
             _logger = logger;
@@ -99,7 +100,7 @@ namespace SerialPortTest
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error reading data: {ExceptionMessage}", ex.Message);
+                _logger.LogError("Error sending data: {ExceptionMessage}", ex.Message);
             }
         }
 
@@ -120,7 +121,7 @@ namespace SerialPortTest
 
                 logMessage += c.AsciiCode();
 
-                logMessage += (i != ch.Length - 1) && c.IsAsciiControlOrSpaceChar() ? ", " : "";
+                logMessage += i != ch.Length - 1 && c.IsAsciiControlOrSpaceChar() ? ", " : "";
             }
 
             _logger.LogTrace("Outbound message received:\n[ {OutboundMessage} ]", logMessage);

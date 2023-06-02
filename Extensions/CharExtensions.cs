@@ -1,8 +1,8 @@
-﻿namespace SerialPortTest
+﻿namespace SerialPortTest.Extensions
 {
     internal static class CharExtensions
     {
-        internal static bool IsAsciiControlOrSpaceChar(this char c) { return c == 127 || (int)c < 32; }
+        internal static bool IsAsciiControlOrSpaceChar(this char c) { return c == 127 || c < 32; }
         internal static string AsciiCode(this char c)
         {
             if (!c.IsAsciiControlOrSpaceChar())
