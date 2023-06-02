@@ -24,16 +24,6 @@ namespace Arcta.Lims.Machines.Protocols.Transport
             await base.StartReceivingInboundMessagesAsync(cancellationToken);
         }
 
-        public new async Task SendOutboundMessageAsync(string outboundMessage, CancellationToken cancellationToken)
-        {
-            if (Stream == null)
-            {
-                _logger.LogError("Unable to send until a client is connected");
-                return;
-            }
-            await base.SendOutboundMessageAsync(outboundMessage, cancellationToken);
-        }
-
         public void Dispose()
         {
             Stream?.Close();
