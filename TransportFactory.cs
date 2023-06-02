@@ -14,13 +14,13 @@ public class TransportFactory : ITransportFactory
 
     public ITransport GetTransport(ProtocolOptions options)
     {
-        return options.PhysicalLayer.Type.ToUpper() switch
+        return options.Transport.Type.ToUpper() switch
         {
-            "TCP" => options.PhysicalLayer.Tcp!.TcpMode == TcpMode.Listener ?
-                new TcpListener(_loggerFactory.CreateLogger<TcpListener>(), options.PhysicalLayer.Tcp!)
-                : new TcpClient(_loggerFactory.CreateLogger<TcpClient>(), options.PhysicalLayer.Tcp!),
-            "RS232" => new RS232(_loggerFactory.CreateLogger<RS232>(), options.PhysicalLayer.Rs232!),
-            _ => throw new NotSupportedException($"The physical layer type: {options.PhysicalLayer.Type}, is not supported."),
+            "TCP" => options.Transport.Tcp!.TcpMode == TcpMode.Listener ?
+                new TcpListener(_loggerFactory.CreateLogger<TcpListener>(), options.Transport.Tcp!)
+                : new TcpClient(_loggerFactory.CreateLogger<TcpClient>(), options.Transport.Tcp!),
+            "RS232" => new RS232(_loggerFactory.CreateLogger<RS232>(), options.Transport.Rs232!),
+            _ => throw new NotSupportedException($"The physical layer type: {options.Transport.Type}, is not supported."),
         };
     }
 }

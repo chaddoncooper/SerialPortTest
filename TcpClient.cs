@@ -5,13 +5,22 @@ namespace Arcta.Lims.Machines.Protocols.Transport
 {
     public sealed class TcpClient : StreamingTransport, ITransport
     {
+        private readonly System.Net.Sockets.TcpClient _tcpClient;
+        private readonly TcpOptions _options;
+
         public TcpClient(ILogger<TcpClient> logger, TcpOptions options) : base(logger)
         {
-            var tcpClient = new System.Net.Sockets.TcpClient(options.IPAddress, options.Port);
-            Stream = tcpClient.GetStream();
+            _tcpClient = new System.Net.Sockets.TcpClient();
+            _options = options;
+            _tcpClient.Connect(_options.IPAddress, _options.Port);
+            _logger.LogTrace("Connected to host {IPAddress}:{Port}", _options.IPAddress, _options.Port);
+            Stream = _tcpClient.GetStream();
         }
 
-        // TODO:
-        // use client as the method for receive and sending
+        public void Dispose()
+        {
+            Stream?.Close();
+            _tcpClient?.Close();
+        }
     }
 }

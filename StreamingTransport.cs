@@ -79,8 +79,7 @@ namespace Arcta.Lims.Machines.Protocols.Transport
         {
             if (Stream == null)
             {
-                _logger.LogError("Unable to send as stream is null");
-                return;
+                throw new NullReferenceException("Unable to send as stream is null");
             }
 
             try
@@ -88,13 +87,10 @@ namespace Arcta.Lims.Machines.Protocols.Transport
                 LogOutboundMessage(outboundMessage);
                 await Stream.WriteAsync(Encoding.ASCII.GetBytes(outboundMessage), cancellationToken);
             }
-            catch (OperationCanceledException)
-            {
-                _logger.LogTrace("{MethodName} cancelled", nameof(SendOutboundMessageAsync));
-            }
             catch (Exception ex)
             {
                 _logger.LogError("Error sending data: {ExceptionMessage}", ex.Message);
+                throw;
             }
         }
 
