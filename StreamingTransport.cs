@@ -20,8 +20,7 @@ namespace Arcta.Lims.Machines.Protocols.Transport
         {
             if (Stream == null)
             {
-                _logger.LogError("Unable to receive as stream is null");
-                return;
+                throw new NullReferenceException("Unable to receive as stream is null");
             }
             var buffer = new byte[4096];
 
