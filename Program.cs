@@ -21,18 +21,17 @@ var machinesOptions = new List<MachineOptions>();
 
 configuration.Bind("Machines", machinesOptions);
 
-var chad = "";
-configuration.Bind("Chad", chad);
-
 var protocolFactory = host.Services.GetRequiredService<IProtocolFactory>();
 var rs232 = protocolFactory.GetPhysicalLayer(machinesOptions.First().Protocol);
 
 rs232.NewInboundMessageEvent += Rs232Receiver_DataReceived;
 var cancellationTokenSource = new CancellationTokenSource();
-Task task = Task.Run(() => rs232.StartReceivingInboundMessagesAsync(cancellationTokenSource.Token));
+Task rs232ReceiveTask = Task.Run(() => rs232.StartReceivingInboundMessagesAsync(cancellationTokenSource.Token));
 await rs232.SendOutboundMessageAsync("Hello from console", cancellationTokenSource.Token);
 
-
+//var tcp = protocolFactory.GetPhysicalLayer(machinesOptions.ElementAt(1).Protocol);
+//Task tcpTask = Task.Run(() => tcp.StartReceivingInboundMessagesAsync(cancellationTokenSource.Token));
+//await tcp.SendOutboundMessageAsync("hello", cancellationTokenSource.Token);
 
 Console.ReadLine();
 

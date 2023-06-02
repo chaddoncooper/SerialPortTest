@@ -8,8 +8,9 @@ namespace SerialPortTest.RS232
 {
     public sealed class RS232PhysicalLayer : IDisposable, IPhysicalLayer
     {
-        private readonly SerialPort _serialPort;
+        private readonly Stream _stream;
         private readonly ILogger<RS232PhysicalLayer> _logger;
+        private readonly SerialPort _serialPort;
         private readonly RS232Options _options;
         public event EventHandler<string>? NewInboundMessageEvent;
 
@@ -21,6 +22,7 @@ namespace SerialPortTest.RS232
                 _options.Parity, _options.DataBits, _options.StopBits);
 
             _serialPort.Open();
+            _stream = _serialPort.BaseStream;
             _logger.LogTrace("{ComPort} opened", _options.PortName);
         }
 
@@ -34,15 +36,14 @@ namespace SerialPortTest.RS232
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    int bytesRead = await _serialPort.BaseStream.ReadAsync(buffer, cancellationToken);
+                    int bytesRead = await _stream.ReadAsync(buffer, cancellationToken);
 
-                    if (bytesRead > 0)
+                    if (bytesRead == 0)
                     {
-                        var receivedData = new byte[bytesRead];
-                        Array.Copy(buffer, 0, receivedData, 0, bytesRead);
-
-                        OnDataReceived(receivedData);
+                        break;
                     }
+
+                    OnDataReceived(Encoding.ASCII.GetString(buffer, 0, bytesRead));
                 }
             }
             catch (OperationCanceledException)
@@ -55,19 +56,17 @@ namespace SerialPortTest.RS232
             }
         }
 
-        private void OnDataReceived(byte[] data)
+        private void OnDataReceived(string data)
         {
-            var message = Encoding.ASCII.GetString(data);
+            LogInboundMessage(data);
 
-            LogInboundMessage(message);
-
-            NewInboundMessageEvent?.Invoke(this, message);
+            NewInboundMessageEvent?.Invoke(this, data);
         }
 
         private void LogInboundMessage(string inboundMessage)
         {
             LogInboundMessageAsString(inboundMessage);
-            LogInboundMessageAsCharacterStream(inboundMessage);
+            _logger.LogTrace("Inbound message character stream:\n[ {InboundMessageCharacterStream} ]", inboundMessage.AsAsciiCharacterCodes());
         }
 
         private void LogInboundMessageAsString(string inboundMessage)
@@ -81,18 +80,12 @@ namespace SerialPortTest.RS232
             _logger.LogTrace("Inbound message received:\n[ {InboundMessage} ]", logMessage);
         }
 
-        private void LogInboundMessageAsCharacterStream(string message)
-        {
-            _logger.LogTrace("Inbound message character stream:\n[ {InboundMessageCharacterStream} ]",
-                string.Join(" ", message.Select(ch => (int)ch)));
-        }
-
         public async Task SendOutboundMessageAsync(string outboundMessage, CancellationToken cancellationToken)
         {
             try
             {
                 LogOutboundMessage(outboundMessage);
-                await _serialPort.BaseStream.WriteAsync(Encoding.ASCII.GetBytes(outboundMessage), cancellationToken);
+                await _stream.WriteAsync(Encoding.ASCII.GetBytes(outboundMessage), cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -106,31 +99,8 @@ namespace SerialPortTest.RS232
 
         private void LogOutboundMessage(string inboundMessage)
         {
-            LogOutboundMessageAsString(inboundMessage);
-            LogOutboundMessageAsCharacterStream(inboundMessage);
-        }
-
-        private void LogOutboundMessageAsString(string outboundMessage)
-        {
-            var ch = outboundMessage.ToCharArray();
-
-            var logMessage = "";
-            for (int i = 0; i < ch.Length; i++)
-            {
-                char c = ch[i];
-
-                logMessage += c.AsciiCode();
-
-                logMessage += i != ch.Length - 1 && c.IsAsciiControlOrSpaceChar() ? ", " : "";
-            }
-
-            _logger.LogTrace("Outbound message received:\n[ {OutboundMessage} ]", logMessage);
-        }
-
-        private void LogOutboundMessageAsCharacterStream(string message)
-        {
-            _logger.LogTrace("Outbound message character stream:\n[ {OutboundMessageCharacterStream} ]",
-                string.Join(" ", message.Select(ch => (int)ch)));
+            _logger.LogTrace("Outbound message received:\n[ {OutboundMessage} ]", inboundMessage.WithAsciiCodes());
+            _logger.LogTrace("Outbound message character stream:\n[ {OutboundMessageCharacterStream} ]", inboundMessage.AsAsciiCharacterCodes());
         }
 
         public void Dispose()

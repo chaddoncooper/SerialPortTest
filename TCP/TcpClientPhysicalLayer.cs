@@ -1,20 +1,21 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SerialPortTest.Extensions;
 using System.Net.Sockets;
 using System.Text;
 
 namespace SerialPortTest.TCP
 {
-    public class TcpPhysicalLayer : IPhysicalLayer
+    public class TcpClientPhysicalLayer : IPhysicalLayer
     {
-        private readonly ILogger<TcpPhysicalLayer> _logger;
+        private readonly ILogger<TcpClientPhysicalLayer> _logger;
         private readonly TcpOptions _options;
         private readonly TcpClient _tcpClient;
         private readonly NetworkStream _networkStream;
 
         public event EventHandler<string>? NewInboundMessageEvent;
 
-        public TcpPhysicalLayer(ILogger<TcpPhysicalLayer> logger, IOptions<TcpOptions> options)
+        public TcpClientPhysicalLayer(ILogger<TcpClientPhysicalLayer> logger, IOptions<TcpOptions> options)
         {
             _logger = logger;
             _options = options.Value;
@@ -38,8 +39,7 @@ namespace SerialPortTest.TCP
                         break;
                     }
 
-                    string receivedData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Console.WriteLine("Received data: " + receivedData);
+                    OnDataReceived(Encoding.ASCII.GetString(buffer, 0, bytesRead));
                 }
             }
             catch (OperationCanceledException)
@@ -50,6 +50,30 @@ namespace SerialPortTest.TCP
             {
                 _logger.LogError("Error reading data: {ExceptionMessage}", ex.Message);
             }
+        }
+
+        private void OnDataReceived(string data)
+        {
+            LogInboundMessage(data);
+
+            NewInboundMessageEvent?.Invoke(this, data);
+        }
+
+        private void LogInboundMessage(string inboundMessage)
+        {
+            LogInboundMessageAsString(inboundMessage);
+            _logger.LogTrace("Inbound message character stream:\n[ {InboundMessageCharacterStream} ]", inboundMessage.AsAsciiCharacterCodes());
+        }
+
+        private void LogInboundMessageAsString(string inboundMessage)
+        {
+            var logMessage = inboundMessage[0] switch
+            {
+                (char)10 => "<LF>",
+                (char)13 => "<CR>",
+                _ => inboundMessage,
+            };
+            _logger.LogTrace("Inbound message received:\n[ {InboundMessage} ]", logMessage);
         }
 
         public async Task SendOutboundMessageAsync(string message, CancellationToken cancellationToken)
